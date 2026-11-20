@@ -1,0 +1,18 @@
+# Build output
+build/
+*.o
+*.d
+app
+
+# Simulation output (if logging is turned on)
+out/
+
+# Editor and OS files
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Files made by the README examples
+run.txt
+demo/
