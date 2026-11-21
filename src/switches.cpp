@@ -118,8 +118,9 @@ currentSignal=2;
 }
 else if(totalDist <= 3 && currentSignal != 2) {
 currentSignal=1;
-}}}}}}
-// signals[i] = currentSignal; // Uncomment if you add signals array
+}}}}}
+signals[i]=currentSignal;
+}
 }
 // ----------------------------------------------------------------------------
 // UPDATE SIGNAL LIGHTS

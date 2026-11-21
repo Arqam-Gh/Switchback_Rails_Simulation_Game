@@ -9,7 +9,7 @@
 // LEVEL LOADING
 // ----------------------------------------------------------------------------
 // Load a .lvl file.
-bool loadLevelFile();
+bool loadLevelFile(const char* fileName);
 void printGrid();
 // file to be read will be there in the place of that variable we will be using this var to deal to file
 // ----------------------------------------------------------------------------

@@ -15,10 +15,10 @@ NORMAL
 
 MAP:
                                         
-  S=====A=====D
+  S=====A=+===D
           |                              
           |                              
-  S=====B=====D                          
+  S=====B=+===D                          
           |                              
           |                              
           D                              
@@ -28,6 +28,6 @@ A PER_DIR 0 2 2 2 2 STRAIGHT TURN
 B PER_DIR 0 2 2 2 2 STRAIGHT TURN
 
 TRAINS:
-0 2 2 1 0
-5 2 5 1 1
+0 2 1 1 0
+5 2 4 1 1
 

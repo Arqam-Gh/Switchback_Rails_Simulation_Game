@@ -11,8 +11,8 @@ several files.
 ## Quickstart
 
 ```bash
-git clone https://github.com/Arqam-Gh/switchback-rails.git
-cd switchback-rails
+git clone https://github.com/Arqam-Gh/Switchback_Rails_Simulation_Game.git
+cd Switchback_Rails_Simulation_Game
 make
 make run
 ```
@@ -22,16 +22,13 @@ This is the real output of the current version, with the grid lines cut out:
 
 ```
 Simulation Started
-Press SPACE to start
+Level: Complex Interconnected Railway Network - 10 Trains | Weather: NORMAL
 
 === TICK 1 ===
 ...
 Active Trains: None
-Delivered: 0/10 | Crashed: 10
+Delivered: 10/10 | Crashed: 0
 ```
-
-The program does not deliver any train yet, because of the row offset bug
-described in [Current status and known limits](#current-status-and-known-limits).
 
 ## Prerequisites
 
@@ -44,16 +41,30 @@ described in [Current status and known limits](#current-status-and-known-limits)
 ## What it does
 
 - Loads a level from a text file. The file holds the map, the switches and the train list.
+  The level file name can be given on the command line.
 - Moves every train one tile per tick over `-`, `=`, `|`, `+`, `/` and `\` track.
 - Turns trains 90 degrees on curves.
+- At a crossing `+`, a train picks the direction (straight, right or left, never
+  back) whose next tile is track and is closest to its destination.
 - Counts trains entering each switch. When a counter reaches its limit, the
   switch flips after that tick's movement (a deferred flip).
 - Supports two switch modes. `PER_DIR` keeps a counter for each direction and
   `GLOBAL` keeps one counter for all trains.
+- In the turn state, a switch turns the train 90 degrees onto the side that has
+  track. If both sides have track, it picks the side closer to the destination.
+  If neither side has track, the train goes straight.
 - Finds the nearest destination `D` for each train when it appears.
 - Detects two trains aiming at the same tile and two trains swapping tiles.
-  The train closer to its destination goes first. If both are the same
-  distance away, both crash.
+  The train closer to its destination goes first. If two trains aiming at the
+  same tile are the same distance away, the train with the lower number goes
+  and the other waits, and an emergency halt starts. If two trains swap tiles
+  at the same distance, both crash and an emergency halt does not start.
+- During an emergency halt, no train moves for 3 ticks. A halt does not start
+  again on the tick right after one ends.
+- Stores the signal colour of every switch each tick (0 green, 1 yellow, 2 red).
+  A switch is red when a train is 1 tile or less away, and yellow when a train is
+  3 tiles or less away.
+- Writes log files to an `out/` folder inside the folder the program runs from.
 - Counts delivered and crashed trains and prints the grid every tick.
 
 ## Build and run
@@ -66,8 +77,28 @@ make run    # runs the simulation
 make clean  # removes build/
 ```
 
-`make run` starts the program inside the `levels/` folder, because the
-program opens its level file from the current folder.
+`make run` starts the program inside the `levels/` folder, with the default
+level `complex_network.lvl`.
+
+To run another level, give its path as the first argument:
+
+```bash
+./build/switchback levels/easy_level.lvl
+```
+
+If the file cannot be opened, the program prints `Cannot open level file` and exits.
+
+## Output files
+
+The program creates an `out/` folder in the folder it runs from (for `make run`,
+that is `levels/out/`). The folder is listed in `.gitignore`.
+
+| File | Content |
+|---|---|
+| `trace.csv` | One line per active train per tick: `tick,train,x,y,direction,ACTIVE` |
+| `switches.csv` | One line per switch per tick: `tick,switch,mode,state` (state 0 straight, 1 turn) |
+| `signals.csv` | One line per switch per tick: `tick,switch,colour` |
+| `metrics.txt` | Total trains, total ticks, delivered, crashed and weather |
 
 ## Examples
 
@@ -80,29 +111,27 @@ tail -n 2 run.txt
 
 You should see `Active Trains: None` and a `Delivered: ... | Crashed: ...` line.
 
-**Run the easy level:** the program always opens `complex_network.lvl`, so
-copy the level you want into a new folder under that name:
+**Run the easy level:**
 
 ```bash
-mkdir demo
-cp levels/easy_level.lvl demo/complex_network.lvl
-cd demo && ../build/switchback
+make
+./build/switchback levels/easy_level.lvl | tail -n 2
 ```
 
-You should see five ticks and a last line of `Delivered: 0/2 | Crashed: 2`.
+You should see a last line of `Delivered: 2/2 | Crashed: 0`.
 
 To write your own level, follow [docs/LEVEL_FORMAT.md](docs/LEVEL_FORMAT.md).
 
 ## Project layout
 
 ```
-switchback-rails/
+Switchback_Rails_Simulation_Game/
 ├── src/                      C++ source files
 │   ├── main.cpp              Entry point and main loop
 │   ├── simulation.cpp        One tick of the simulation, grid printing
 │   ├── simulation_state.cpp  Global variables and reset
 │   ├── trains.cpp            Spawning, routing, movement, collisions, arrivals
-│   ├── switches.cpp          Switch counters, flips, signal distance check
+│   ├── switches.cpp          Switch counters, flips, signal colours
 │   ├── grid.cpp              Tile checks (track, switch, bounds)
 │   └── io.cpp                Level loading and log writers
 ├── include/                  Header files, one for each source file
@@ -123,24 +152,25 @@ switchback-rails/
 3. Update switch counters for trains that entered a switch.
 4. Mark switches whose counter reached its limit.
 5. Detect and resolve collisions.
-6. Move the trains. A train that leaves the track crashes.
+6. Move the trains. A train that leaves the track crashes. No train moves during an emergency halt.
 7. Apply the queued switch flips.
 8. Check arrivals at destinations.
-9. Update signal distances and the halt timer.
-10. Print the grid.
+9. Update signal colours and the halt timer.
+10. Write the trace, switch and signal logs.
+11. Print the grid.
 
-The program stops when no train is left on the map.
+The program stops when no train is left on the map, then writes `out/metrics.txt`.
 
 ## Level files
 
 Four levels are included in `levels/`:
 
-| File | Size | Trains |
-|---|---|---|
-| `easy_level.lvl` | 15 x 40 | 2 |
-| `medium_level.lvl` | 20 x 50 | 5 |
-| `hard_level.lvl` | 25 x 60 | 8 |
-| `complex_network.lvl` | 30 x 70 | 10 |
+| File | Size | Trains | Result of the current version |
+|---|---|---|---|
+| `easy_level.lvl` | 15 x 40 | 2 | 2 delivered |
+| `medium_level.lvl` | 20 x 50 | 5 | 5 delivered |
+| `hard_level.lvl` | 25 x 60 | 8 | 8 delivered |
+| `complex_network.lvl` | 30 x 70 | 10 | 10 delivered |
 
 The format is explained in [docs/LEVEL_FORMAT.md](docs/LEVEL_FORMAT.md).
 
@@ -148,30 +178,23 @@ The format is explained in [docs/LEVEL_FORMAT.md](docs/LEVEL_FORMAT.md).
 
 This project is a work in progress. These are the limits as of this version:
 
-- **The level name is fixed in the code.** `loadLevelFile()` in `src/io.cpp`
-  always opens `complex_network.lvl`. To run another level, change that name
-  or copy the level over it.
-- **Train rows do not line up with the maps.** In the bundled levels, every
-  train starts one row below its `S` tile, so each train leaves the track and
-  crashes as soon as it appears. In the current version none of the four
-  levels delivers a train. This is the first thing to fix.
-- **Crossing routing is a stub.** `getSmartDirectionAtCrossing()` only
-  returns the current direction, so trains go straight through `+`.
-- **Emergency halt is never triggered.** The timer code exists, but nothing
-  calls `applyEmergencyHalt()`.
-- **Weather, signals and log files are read or computed but not used.**
-  Weather is stored, signal colours are not saved anywhere, and the log
-  writers in `src/io.cpp` are never called.
-- **Switch turning is basic.** A switch in the turn state only handles some
-  entry directions, so not every junction behaves like a real one.
+- **Two trains that swap tiles at the same distance still crash.** No bundled
+  level does this. Two trains that want the same tile at the same distance no
+  longer crash. The one with the higher train number waits.
+- **Trains can wait in a line.** A waiting train blocks the trains behind it,
+  and there is no check for a deadlock where trains wait on each other forever.
+- **Weather has no effect on trains.** It is read, printed at the start and
+  written to `out/metrics.txt`. No rule in the code uses it.
+- **Switch letters and map letters share the alphabet.** The letters `D` and `S`
+  are also used for destinations and spawn points, so a switch named `D` or `S`
+  in a level file is counted on those tiles too.
+- **Switches are matched by letter order.** Switch lines in a level file must
+  start at `A` and not skip letters.
 
 ## Ideas for next steps
 
-- Take the level file name from the command line.
-- Fix the row offset between level files and the grid.
-- Choose the direction at a crossing by moving toward the train's destination.
-- Call the emergency halt when a collision is about to happen.
-- Write the trace, switch and signal logs to an `out/` folder.
+- Choose destinations so that trains do not all go to the same `D`.
+- Give weather a real effect on the simulation.
 - Replace the global arrays with a struct for trains and a struct for switches.
 
 ## License

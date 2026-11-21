@@ -12,6 +12,7 @@ extern int active_direc[30];
 extern int active_colour[30];
 extern bool halt_s;
 extern int halt_t;
+extern int halt_end_tick;
 extern int pre_coordinates[30][2];
 extern int pdist,dist;
 extern int fdest[30][2];

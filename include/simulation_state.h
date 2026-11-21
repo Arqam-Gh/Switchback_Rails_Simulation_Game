@@ -37,6 +37,7 @@ extern string temp;
 extern bool switch_exists[27];
 extern int c_numbers[27][6];
 extern bool switchFlipPending[27];
+extern int signals[27];
 // ----------------------------------------------------------------------------
 // WEATHER CONSTANTS
 // ----------------------------------------------------------------------------
@@ -65,6 +66,7 @@ extern int active_direc[30];
 extern int active_colour[30];
 extern bool halt_s;
 extern int halt_t;
+extern int halt_end_tick;
 extern int crash;
 extern int reach;
 extern int atc;

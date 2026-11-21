@@ -19,8 +19,9 @@ using namespace std;
 
 void initializeSimulation() {
 tick=0;
-//initializeLogFiles();
+initializeLogFiles();
 cout<<"\nSimulation Started\n";
+cout<<"Level: "<<name<<" | Weather: "<<weather<<"\n";
 cout<<"Press SPACE to start\n";
 }
 
@@ -81,6 +82,9 @@ applyDeferredFlips();
 checkArrivals();
 updateSignalLights();
 updateEmergencyHalt();
+logTrainTrace();
+logSwitchState();
+logSignalState();
 printGrid();
 
 }

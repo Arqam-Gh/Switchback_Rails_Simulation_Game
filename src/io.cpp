@@ -7,6 +7,13 @@
 #include <cstdlib>
 #include <string>
 #include <iostream>
+#ifdef _WIN32
+#include <direct.h>
+#define MAKE_DIR(d) _mkdir(d)
+#else
+#include <sys/stat.h>
+#define MAKE_DIR(d) mkdir(d,0777)
+#endif
 using namespace std;
 static ofstream traceFile;
 static ofstream switchFile;
@@ -20,12 +27,17 @@ static ofstream signalFile;
 // ----------------------------------------------------------------------------
 // Load a .lvl file into global state.
 // ----------------------------------------------------------------------------
-bool loadLevelFile() {
-ifstream file_to_read("complex_network.lvl");
+bool loadLevelFile(const char* fileName) {
+ifstream file_to_read(fileName);
+if(!file_to_read.is_open()) {
+cout<<"Cannot open level file: "<<fileName<<endl;
+return 0;
+}
 // MAP READ
 //Switches read
 while(file_to_read>>word) {
 if(word=="NAME:") {
+file_to_read>>ws;
 getline(file_to_read,name);
 }
 else if(word=="ROWS:") {
@@ -38,6 +50,7 @@ else if(word=="SEED:") {
 file_to_read>>seed;
 }
 else if(word=="WEATHER:") {
+file_to_read>>ws;
 getline(file_to_read,weather);
 }
 else if(word=="MAP:"){
@@ -92,6 +105,16 @@ break;
 return 1;
 }
 
+
+// ----------------------------------------------------------------------------
+// INITIALIZE LOG FILES
+// ----------------------------------------------------------------------------
+void initializeLogFiles() {
+MAKE_DIR("out");
+traceFile.open("out/trace.csv");
+switchFile.open("out/switches.csv");
+signalFile.open("out/signals.csv");
+}
 
 // ----------------------------------------------------------------------------
 // LOG TRAIN TRACE
@@ -170,6 +193,9 @@ metricsFile << "Simulation Metrics\n";
 metricsFile << "------------------\n";
 metricsFile << "Total Trains: " << t_train << "\n";
 metricsFile << "Total Ticks: " << tick << "\n";
+metricsFile << "Delivered: " << reach << "\n";
+metricsFile << "Crashed: " << crash << "\n";
+metricsFile << "Weather: " << weather << "\n";
 metricsFile.close();
 }
 }

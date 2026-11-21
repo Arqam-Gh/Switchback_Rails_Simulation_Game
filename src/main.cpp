@@ -18,11 +18,12 @@
 // file or initialize application).
 // ----------------------------------------------------------------------------
 
-int main() {
+int main(int argc, char* argv[]) {
     initializeSimulationState();
-    loadLevelFile();
+    if(!loadLevelFile(argc>1 ? argv[1] : "complex_network.lvl")) return 1;
     initializeSimulation();
     while(!isSimulationComplete() ){
     simulateOneTick();
     }
+    writeMetrics();
 }

@@ -74,6 +74,33 @@ return 1;
 }
 
 // ----------------------------------------------------------------------------
+// BEST OPEN DIRECTION (helper)
+// ----------------------------------------------------------------------------
+// Among straight, right and left (never reverse), keep only the directions whose
+// next tile is track, and return the one closest to the train's destination.
+// If straight is allowed and ties, straight wins. If nothing is open, go straight.
+// ----------------------------------------------------------------------------
+static int bestOpenDirection(int k, bool allowStraight) {
+int best=active_direc[k];
+int bestDist=100000;
+int dx[4]={0,1,0,-1};
+int dy[4]={-1,0,1,0};
+for(int d=0; d<4; d++) {
+if(d==(active_direc[k]+2)%4) continue;
+if(d==active_direc[k] && !allowStraight) continue;
+int nx=active_coordinates[k][0]+dx[d];
+int ny=active_coordinates[k][1]+dy[d];
+if(!isInBounds(ny,nx) || !isTrackTile(ny,nx)) continue;
+int dd=abs(nx-fdest[k][0])+abs(ny-fdest[k][1]);
+if(dd<bestDist || (dd==bestDist && d==active_direc[k])) {
+bestDist=dd;
+best=d;
+}
+}
+return best;
+}
+
+// ----------------------------------------------------------------------------
 // GET NEXT DIRECTION based on current tile and direction
 // ----------------------------------------------------------------------------
 // Return new direction after entering the tile.
@@ -104,25 +131,14 @@ next_direc[k] = 2;
 }
 }
 if(grid[active_coordinates[k][1]][active_coordinates[k][0]]=='+'){
-next_direc[k]=active_direc[k];
+next_direc[k]=getSmartDirectionAtCrossing(k);
 }
 if(grid[active_coordinates[k][1]][active_coordinates[k][0]]>=65 && grid[active_coordinates[k][1]][active_coordinates[k][0]]<=90){
 int I=grid[active_coordinates[k][1]][active_coordinates[k][0]]-'A';
 if(numbers[I][0]==0){
 next_direc[k]=active_direc[k];}
 if(numbers[I][0]==1){
-if(active_direc[k]== 0) {
-next_direc[k] = 1;
-}
-else if(active_direc[k]==1) {
-next_direc[k] = 2;
-}
-else if(active_direc[k]==2) {
-next_direc[k] = 1;
-}
-else if(active_direc[k]==3) {
-next_direc[k] = 2;
-}
+next_direc[k]=bestOpenDirection(k,false);
 }
 }
 return 1;
@@ -133,7 +149,7 @@ return 1;
 // Choose best direction at '+' toward destination.
 // ----------------------------------------------------------------------------
 int getSmartDirectionAtCrossing(int trainIdx) {
-return active_direc[trainIdx];
+return bestOpenDirection(trainIdx,true);
 }
 
 // ----------------------------------------------------------------------------
@@ -199,14 +215,10 @@ for(int i=0;i<30;i++){
                                     next_coor[i][1]=active_coordinates[i][1];
 
                                 }
-                                else {trainActive[j]=0;
-                                      trainActive[i]=0;
-                                      active_coordinates[i][0]=-1;
-                                      active_coordinates[i][1]=-1;
-                                      active_coordinates[j][0]=-1;
-                                      active_coordinates[j][1]=-1;
-                                      crash+=2;
-                                      break;
+                                else {
+                                      next_coor[j][0]=active_coordinates[j][0];
+                                      next_coor[j][1]=active_coordinates[j][1];
+                                      applyEmergencyHalt();
                              }
                         }
                 if(next_coor[i][0]==active_coordinates[j][0] && next_coor[i][1]==active_coordinates[j][1] && next_coor[j][0]==active_coordinates[i][0] && next_coor[j][1]==active_coordinates[i][1] ){
@@ -226,6 +238,7 @@ for(int i=0;i<30;i++){
                           active_coordinates[j][0]=-1;
                           active_coordinates[j][1]=-1;
                           crash+=2;
+                          applyEmergencyHalt();
                           break;}
                 }
             }
@@ -260,7 +273,7 @@ reach++;
 // Apply halt to trains in the active zone.
 // ----------------------------------------------------------------------------
 void applyEmergencyHalt() {
-if(!halt_s) {
+if(!halt_s && tick!=halt_end_tick+1) {
 halt_s=true;
 halt_t=3;
 }
@@ -275,8 +288,10 @@ void updateEmergencyHalt() {
 if(halt_s) {
 if(halt_t>0) {
 halt_t--;
-} else {
+}
+if(halt_t==0) {
 halt_s=false;
+halt_end_tick=tick;
 }
 }
 }

@@ -24,6 +24,7 @@ int active_colour[30];
 int prev_coordinates[30][2];
 bool halt_s;
 int halt_t;
+int halt_end_tick;
 int crash;
 int reach;
 // ----------------------------------------------------------------------------
@@ -44,6 +45,7 @@ string temp;
 bool switch_exists[27];
 int c_numbers[27][6];
 bool switchFlipPending[27];
+int signals[27];
 // ----------------------------------------------------------------------------
 // SPAWN AND DESTINATION POINTS
 // ----------------------------------------------------------------------------
@@ -105,6 +107,7 @@ straight[a]="";
 turn[a]="";
 switch_exists[a]=false;
 switchFlipPending[a]=false;
+signals[a]=0;
 }
 pdist=10000;
 dist=0;
@@ -125,6 +128,7 @@ tick=0;
 t_train=0;
 halt_s=false;
 halt_t=0;
+halt_end_tick=-10;
 crash=0;
 reach=0;
 conflict=false;
