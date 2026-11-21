@@ -10,9 +10,6 @@ extern int active_coordinates[30][2];
 extern int prev_coordinates[30][2];
 extern int active_direc[30];
 extern int active_colour[30];
-extern bool halt_s;
-extern int halt_t;
-extern int halt_end_tick;
 extern int pre_coordinates[30][2];
 extern int pdist,dist;
 extern int fdest[30][2];
@@ -66,7 +63,15 @@ void checkArrivals();
 // EMERGENCY HALT
 // ----------------------------------------------------------------------------
 // Apply emergency halt in active zone.
-void applyEmergencyHalt();
+// Start a 3 tick halt on switch group I (0 = A). Trains in the 3x3 area around
+// any tile of that group wait.
+void applyEmergencyHalt(int I);
+
+// End a train. state 1 = delivered, 2 = crashed.
+void endTrain(int k, int state);
+
+// Direction number to word (UP, RIGHT, DOWN, LEFT).
+const char* directionName(int d);
 
 // Update emergency halt timer.
 void updateEmergencyHalt();

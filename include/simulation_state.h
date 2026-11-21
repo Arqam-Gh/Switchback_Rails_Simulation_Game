@@ -64,9 +64,33 @@ extern int active_coordinates[30][2];
 extern int prev_coordinates[30][2];
 extern int active_direc[30];
 extern int active_colour[30];
-extern bool halt_s;
-extern int halt_t;
-extern int halt_end_tick;
+// Emergency halt: one timer for each switch group (A-Z), ticks left
+extern int halt_timer[27];
+// Tick when the last halt of that switch group ended
+extern int halt_end[27];
+// Ticks a train must still wait (safety buffer or rain)
+extern int delay_t[30];
+extern int rain_moves[30];
+// held: train waits on its tile this tick. blocked: its move was blocked by a conflict
+extern bool held[30];
+extern bool blocked[30];
+// How a train ended: 0 still running, 1 delivered, 2 crashed
+extern int final_state[30];
+extern bool final_logged[30];
+extern int final_pos[30][2];
+// Signal colours: 0 green, 1 yellow, 2 red
+extern int signalsOld[27];
+extern int signalShown[27];
+// Counters for metrics.txt
+extern int waitTotal;
+extern int switchFlips;
+extern int signalViolations;
+extern int bufferCount;
+extern int energyUsed;
+// Fixed rules from the manual
+const int HALT_TICKS=3;
+// Rain: a train waits one extra tick after this many moves (the manual gives no number)
+const int RAIN_N=5;
 extern int crash;
 extern int reach;
 extern int atc;

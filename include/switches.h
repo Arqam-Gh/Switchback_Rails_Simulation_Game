@@ -44,6 +44,12 @@ void applyDeferredFlips();
 // Update switch signal colors.
 void updateSignalLights();
 
+// Copy the signal colours to the displayed ones (one tick late in FOG).
+void updateSignalDisplay();
+
+// Colour number to word (GREEN, YELLOW, RED).
+const char* signalName(int s);
+
 // ----------------------------------------------------------------------------
 // SWITCH TOGGLE (for manual control / editing)
 // ----------------------------------------------------------------------------

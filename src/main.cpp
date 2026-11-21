@@ -1,6 +1,8 @@
 #include "simulation_state.h"
 #include "simulation.h"
 #include "io.h"
+#include <iostream>
+using namespace std;
 
 // ============================================================================
 // MAIN.CPP - Entry point of the application (NO CLASSES)
@@ -22,8 +24,10 @@ int main(int argc, char* argv[]) {
     initializeSimulationState();
     if(!loadLevelFile(argc>1 ? argv[1] : "complex_network.lvl")) return 1;
     initializeSimulation();
-    while(!isSimulationComplete() ){
+    const int MAX_TICKS=10000;
+    while(!isSimulationComplete() && tick<MAX_TICKS){
     simulateOneTick();
     }
+    if(tick>=MAX_TICKS) cout<<"Stopped: reached the limit of "<<MAX_TICKS<<" ticks\n";
     writeMetrics();
 }

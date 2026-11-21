@@ -19,10 +19,16 @@ using namespace std;
 
 void initializeSimulation() {
 tick=0;
+bufferCount=0;
+for(int y=0; y<rows ;y++) {
+for(int x=0; x<columns ;x++) {
+if(grid[y][x]=='=')
+bufferCount++;
+}
+}
 initializeLogFiles();
 cout<<"\nSimulation Started\n";
 cout<<"Level: "<<name<<" | Weather: "<<weather<<"\n";
-cout<<"Press SPACE to start\n";
 }
 
 // ----------------------------------------------------------------------------
@@ -30,7 +36,7 @@ cout<<"Press SPACE to start\n";
 // ----------------------------------------------------------------------------
 void printGrid(){
 cout<<"\n========================================\n";
-cout<<"Tick "<<tick;
+cout<<"Tick: "<<tick;
 cout<<"\n========================================\n";
 for(int y=0 ;y<rows ;y++){
 for(int x=0;x<columns;x++){
@@ -42,13 +48,8 @@ trainHere=true;
 break;
 }
 }
-//if(trainActive[y]=1){
-//ttt=grid[active_coordinates[y][0]][active_coordinates[y][1]];
-//grid[active_coordinates[y][0]][active_coordinates[y][1]]='>';
-//}
 if(!trainHere){
 cout<<grid[y][x];
-//grid[next_coor[y][0]][next_coor[y][1]]=ttt;
 }
 }
 cout<<"\n";
@@ -65,6 +66,19 @@ if(activeCount==0){
 cout<<"None";
 }
 cout<<"\n";
+for(int i=0; i<t_train ;i++){
+if(trainActive[i]==true){
+cout<<"Train "<<i<<" at ("<<active_coordinates[i][0]<<","<<active_coordinates[i][1]<<") moving "<<directionName(active_direc[i]);
+if(held[i])
+cout<<" (waiting)";
+cout<<"\n";
+}
+}
+for(int i=0; i<26 ;i++){
+if(switch_exists[i]){
+cout<<"Switch "<<(char)('A'+i)<<": "<<(numbers[i][0]==0 ? straight[i] : turn[i])<<" | signal "<<signalName(signalShown[i])<<"\n";
+}
+}
 cout<<"Delivered: "<<reach<<"/"<<t_train;
 cout<<" | Crashed: "<<crash<<"\n";
 }
@@ -77,11 +91,12 @@ determineAllRoutes();
 updateSwitchCounters();
 queueSwitchFlips();
 detectCollisions();
+updateSignalLights();
 moveAllTrains();
 applyDeferredFlips();
 checkArrivals();
-updateSignalLights();
 updateEmergencyHalt();
+updateSignalDisplay();
 logTrainTrace();
 logSwitchState();
 logSignalState();
